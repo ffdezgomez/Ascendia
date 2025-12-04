@@ -105,8 +105,8 @@ export async function getAllHabitsMetrics(req: Request, res: Response, next: Nex
 
     const mostActiveHabit = metricsPerHabit.length > 0
       ? metricsPerHabit.reduce((prev, curr) =>
-          curr.totalLogs > prev.totalLogs ? curr : prev
-        )
+          curr.totalLogs > prev.totalLogs ? curr : prev,
+        metricsPerHabit[0])
       : null
 
     res.json({

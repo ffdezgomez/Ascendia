@@ -74,8 +74,21 @@ jobs:
         working-directory: ascendia-frontend
         run: npm ci
 
-      - name: Run frontend unit tests
+      - name: Run frontend tests with coverage
         working-directory: ascendia-frontend
         env:
           CI: true
-        run: npm test -- --watch=false --runInBand
+        run: npm run coverage
+
+      - name: Upload frontend coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: ascendia-frontend/coverage/lcov.info
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Archive frontend coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: ascendia-frontend/coverage
+          retention-days: 7
