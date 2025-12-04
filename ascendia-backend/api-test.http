@@ -1,0 +1,125 @@
+### ============================================
+### VARIABLES (cambia según tu configuración)
+### ============================================
+@baseUrl = http://localhost:5000
+@username = ffdezgomez
+@password = Spqr1453
+
+### ============================================
+### 1. LOGIN (Ejecutar PRIMERO para obtener cookie)
+### ============================================
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "username": "{{username}}",
+  "password": "{{password}}"
+}
+
+### ============================================
+### 2. CREAR HÁBITO
+### ============================================
+POST {{baseUrl}}/habit
+Content-Type: application/json
+
+{
+  "name": "Ejercicio Diario",
+  "description": "Cardio y fuerza",
+  "type": "numeric",
+  "unit": "minutos"
+}
+
+### ============================================
+### 3. OBTENER TODOS LOS HÁBITOS
+### ============================================
+GET {{baseUrl}}/habit
+
+### ============================================
+### 4. OBTENER UN HÁBITO ESPECÍFICO
+### (Reemplazar HABIT_ID con el ID obtenido del paso 2)
+### ============================================
+GET {{baseUrl}}/habit/691702eeb2d17c39aaeab2d2
+
+### ============================================
+### 5. ACTUALIZAR HÁBITO
+### (Reemplaza HABIT_ID)
+### ============================================
+PUT {{baseUrl}}/habit/691702eeb2d17c39aaeab2d2
+Content-Type: application/json
+
+{
+  "name": "Ya no entreno",
+  "description": "Ahora leo"
+}
+
+### ============================================
+### 6. CREAR LOG
+### (Reemplaza HABIT_ID con un ID válido)
+### ============================================
+POST {{baseUrl}}/log
+Content-Type: application/json
+
+{
+  "habitId": "691702eeb2d17c39aaeab2d2",
+  "date": "2025-11-14T10:00:00Z",
+  "value": 30,
+  "note": "Corrí 5km en el parque"
+}
+
+### ============================================
+### 7. OBTENER TODOS LOS LOGS
+### ============================================
+GET {{baseUrl}}/log
+
+### ============================================
+### 8. OBTENER LOGS DE UN HÁBITO ESPECÍFICO
+### (Reemplazar HABIT_ID)
+### ============================================
+GET {{baseUrl}}/log?habitId=691702eeb2d17c39aaeab2d2
+
+### ============================================
+### 9. OBTENER UN LOG ESPECÍFICO
+### (Reemplaza LOG_ID)
+### ============================================
+GET {{baseUrl}}/log/691703fc5a8db6cd33f93859
+
+### ============================================
+### 10. ACTUALIZAR LOG
+### (Reemplaza LOG_ID)
+### ============================================
+PUT {{baseUrl}}/log/691703fc5a8db6cd33f93859
+Content-Type: application/json
+
+{
+  "value": 45,
+  "note": "Actualicé el tiempo de ejercicio"
+}
+
+### ============================================
+### 11. ELIMINAR LOG
+### (Reemplaza LOG_ID)
+### ============================================
+DELETE {{baseUrl}}/log/691704145a8db6cd33f9385b
+
+### ============================================
+### 12. ELIMINAR HÁBITO (elimina también sus logs)
+### (Reemplaza HABIT_ID)
+### ============================================
+DELETE {{baseUrl}}/habit/691702eeb2d17c39aaeab2d2
+
+### ============================================
+### 13. LOGOUT
+### ============================================
+POST {{baseUrl}}/logout
+
+### ============================================
+### 14. REGISTRAR NUEVO USUARIO
+### ============================================
+POST {{baseUrl}}/register
+Content-Type: application/json
+
+{
+  "username": "nuevouser",
+  "email": "nuevo@test.com",
+  "password": "password123"
+}

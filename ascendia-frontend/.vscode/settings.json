@@ -1,0 +1,9 @@
+{
+  // Ignore unknown at-rules (Tailwind) in the built-in CSS/SCSS/LESS language service
+  "css.lint.unknownAtRules": "ignore",
+  "scss.lint.unknownAtRules": "ignore",
+  "less.lint.unknownAtRules": "ignore",
+
+  // Use workspace TypeScript (helps the editor pick up @types/react)
+  "typescript.tsdk": "node_modules/typescript/lib"
+}
