@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - develop
+      - master
   pull_request:
     branches:
       - develop
+      - master
 
 jobs:
   backend-tests:
@@ -34,6 +36,11 @@ jobs:
           MONGODB_URI: mongodb://127.0.0.1:27017/ascendia-tests
           MONGODB_DBNAME: ascendia-tests
         run: npm run coverage
+      - name: Upload backend coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: ascendia-backend/coverage/lcov.info
+          token: ${{ secrets.CODECOV_TOKEN }} # si tu repo lo necesita
 
       - name: Archive backend coverage report
         uses: actions/upload-artifact@v4
@@ -41,6 +48,12 @@ jobs:
           name: backend-coverage
           path: ascendia-backend/coverage
           retention-days: 7
+
+      - name: SonarCloud Scan
+        uses: sonarsource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   frontend-tests:
     name: Frontend Unit Tests
