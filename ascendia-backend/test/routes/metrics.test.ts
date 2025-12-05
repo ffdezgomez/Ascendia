@@ -2,7 +2,6 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vites
 import request from 'supertest'
 import mongoose, { model } from 'mongoose'
 import { MongoMemoryServer } from 'mongodb-memory-server'
-import { app } from '../../src/index'
 import Habit from '../../src/models/habit.js'
 import Log from '../../src/models/log.js'
 import { UserRepository } from '../../src/models/user'
@@ -13,12 +12,31 @@ describe('Metrics API Integration Tests', () => {
   let habitId: string
   let testUser
   let mongo: MongoMemoryServer
+  let app: any
 
   beforeAll(async () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2024-05-15T12:00:00Z'))
 
     mongo = await MongoMemoryServer.create()
+
+    process.env.MONGODB_URI = 'mongodb://placeholder/metrics-tests'
+    process.env.MONGODB_DBNAME = 'metrics-tests'
+    if (process.setMaxListeners) process.setMaxListeners(30)
+
+    vi.doMock('../../src/config', () => ({
+      __esModule: true,
+      PORT: '5000',
+      SECRET_JWT_KEY: 'test-key',
+      FRONTEND_URL: 'http://frontend.test',
+      NODE_ENV: 'test',
+      MONGODB_URI: 'mongodb://placeholder/metrics-tests',
+      MONGODB_DBNAME: 'metrics-tests'
+    }))
+
+    const indexModule = await import('../../src/index')
+    app = indexModule.app
+
     await mongoose.connect(mongo.getUri(), { dbName: 'metrics-tests' })
 
     const username = 'testall_BOX'
@@ -43,6 +61,7 @@ describe('Metrics API Integration Tests', () => {
     await Habit.deleteMany({ user: userId })
     await Log.deleteMany({ habit: habitId })
     await mongoose.disconnect()
+    vi.doUnmock('../../src/config')
     if (mongo) {
       await mongo.stop()
     }

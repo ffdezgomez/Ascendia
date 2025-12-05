@@ -37,6 +37,57 @@ describe('logController', () => {
     logModelMock.findOneAndUpdate.mockResolvedValue(null)
   })
 
+  it('requires habitId when creating log', async () => {
+    const req: any = { currentUserId: 'u1', body: { value: 1 } }
+    const res = createRes()
+    const next = vi.fn()
+
+    await createLog(req, res as any, next)
+
+    expect(res.status).toHaveBeenCalledWith(400)
+    expect(res.json).toHaveBeenCalledWith({ error: 'habitId es requerido' })
+    expect(next).not.toHaveBeenCalled()
+  })
+
+  it('forwards errors from habit lookup', async () => {
+    const boom = new Error('db')
+    habitModelMock.findOne.mockRejectedValue(boom)
+
+    const req: any = { currentUserId: 'u1', body: { habitId: 'h1', value: 1 } }
+    const res = createRes()
+    const next = vi.fn()
+
+    await createLog(req, res as any, next)
+
+    expect(next).toHaveBeenCalledWith(boom)
+  })
+
+  it('rejects non-positive or invalid values', async () => {
+    habitModelMock.findOne.mockResolvedValue({ _id: 'h1', type: 'number' })
+
+    const req: any = { currentUserId: 'u1', body: { habitId: 'h1', value: 'abc' } }
+    const res = createRes()
+    const next = vi.fn()
+
+    await createLog(req, res as any, next)
+
+    expect(res.status).toHaveBeenCalledWith(400)
+    expect(res.json).toHaveBeenCalledWith({ error: 'value debe ser un número positivo' })
+  })
+
+  it('rejects invalid dates', async () => {
+    habitModelMock.findOne.mockResolvedValue({ _id: 'h1', type: 'number' })
+
+    const req: any = { currentUserId: 'u1', body: { habitId: 'h1', value: 2, date: 'bad' } }
+    const res = createRes()
+    const next = vi.fn()
+
+    await createLog(req, res as any, next)
+
+    expect(res.status).toHaveBeenCalledWith(400)
+    expect(res.json).toHaveBeenCalledWith({ error: 'Fecha inválida' })
+  })
+
   it('validates habit existence before creating a log', async () => {
     habitModelMock.findOne.mockResolvedValue(null)
 
@@ -131,6 +182,29 @@ describe('logController', () => {
     expect(res.json).toHaveBeenCalledWith(updatedDoc)
   })
 
+  it('updates existing numeric log and keeps note when provided', async () => {
+    habitModelMock.findOne.mockResolvedValue({ _id: 'hn', type: 'number' })
+    logModelMock.findOne.mockResolvedValue({ _id: 'log-note' })
+    const updatedDoc = { _id: 'log-note', value: 10, note: 'hi' }
+    logModelMock.findOneAndUpdate.mockResolvedValue(updatedDoc)
+
+    const req: any = {
+      currentUserId: 'user-21',
+      body: { habitId: 'hn', value: 10, note: 'hi' }
+    }
+    const res = createRes()
+    const next = vi.fn()
+
+    await createLog(req, res as any, next)
+
+    expect(logModelMock.findOneAndUpdate).toHaveBeenCalledWith(
+      { _id: 'log-note' },
+      expect.objectContaining({ value: 10, note: 'hi' }),
+      { new: true }
+    )
+    expect(res.status).toHaveBeenCalledWith(200)
+  })
+
   it('retrieves logs filtered by habit when query parameter is present', async () => {
     const docs = [{ _id: 'l1' }]
     const sortMock = vi.fn().mockResolvedValue(docs)
@@ -173,6 +247,108 @@ describe('logController', () => {
       $lt: expect.any(Date)
     })
     expect(sortMock).toHaveBeenCalledWith({ date: -1 })
+  })
+
+  it('retrieves logs without filters when no query provided', async () => {
+    const docs = [{ _id: 'l2' }]
+    const sortMock = vi.fn().mockResolvedValue(docs)
+    logModelMock.find.mockReturnValue({ sort: sortMock })
+
+    const req: any = { currentUserId: 'user-8', query: {} }
+    const res = createRes()
+    const next = vi.fn()
+
+    await getLogs(req, res as any, next)
+
+    expect(logModelMock.find).toHaveBeenCalledWith({ user: 'user-8' })
+    expect(res.json).toHaveBeenCalledWith(docs)
+  })
+
+  it('returns 404 when reading a missing log', async () => {
+    logModelMock.findOne.mockResolvedValue(null)
+
+    const req: any = { currentUserId: 'u1', params: { id: 'missing' } }
+    const res = createRes()
+    const next = vi.fn()
+
+    const { getLogById } = await import('../../src/controllers/logController')
+    await getLogById(req, res as any, next)
+
+    expect(res.status).toHaveBeenCalledWith(404)
+    expect(res.json).toHaveBeenCalledWith({ error: 'Log no encontrado' })
+  })
+
+  it('returns a log when it exists', async () => {
+    const logDoc = { _id: 'log-1' }
+    logModelMock.findOne.mockResolvedValue(logDoc)
+
+    const req: any = { currentUserId: 'u1', params: { id: 'log-1' } }
+    const res = createRes()
+    const next = vi.fn()
+
+    const { getLogById } = await import('../../src/controllers/logController')
+    await getLogById(req, res as any, next)
+
+    expect(res.json).toHaveBeenCalledWith(logDoc)
+  })
+
+  it('returns 404 when deleting a missing log', async () => {
+    logModelMock.findOneAndDelete.mockResolvedValue(null)
+
+    const req: any = { currentUserId: 'u1', params: { id: 'missing' } }
+    const res = createRes()
+    const next = vi.fn()
+
+    await deleteLog(req, res as any, next)
+
+    expect(res.status).toHaveBeenCalledWith(404)
+    expect(res.json).toHaveBeenCalledWith({ error: 'Log no encontrado' })
+  })
+
+  it('forwards errors when deleting', async () => {
+    const boom = new Error('delete')
+    logModelMock.findOneAndDelete.mockRejectedValue(boom)
+
+    const req: any = { currentUserId: 'u1', params: { id: 'log-err' } }
+    const res = createRes()
+    const next = vi.fn()
+
+    await deleteLog(req, res as any, next)
+
+    expect(next).toHaveBeenCalledWith(boom)
+  })
+
+  it('updates a log and returns it when found', async () => {
+    const updated = { _id: 'log-10', value: 5 }
+    logModelMock.findOneAndUpdate.mockResolvedValue(updated)
+
+    const req: any = { currentUserId: 'u2', params: { id: 'log-10' }, body: { value: 5 } }
+    const res = createRes()
+    const next = vi.fn()
+
+    const { updateLog } = await import('../../src/controllers/logController')
+    await updateLog(req, res as any, next)
+
+    expect(logModelMock.findOneAndUpdate).toHaveBeenCalledWith(
+      { _id: 'log-10', user: 'u2' },
+      { date: undefined, value: 5, note: undefined },
+      { new: true }
+    )
+    expect(res.json).toHaveBeenCalledWith(updated)
+  })
+
+  it('returns 404 when updating a missing log', async () => {
+    logModelMock.findOneAndUpdate.mockResolvedValue(null)
+
+    const req: any = { currentUserId: 'u2', params: { id: 'log-404' }, body: {} }
+    const res = createRes()
+    const next = vi.fn()
+
+    const { updateLog } = await import('../../src/controllers/logController')
+    await updateLog(req, res as any, next)
+
+    expect(res.status).toHaveBeenCalledWith(404)
+    expect(res.json).toHaveBeenCalledWith({ error: 'Log no encontrado' })
   })
 
   it('removes logs and cleans up references when deleting', async () => {

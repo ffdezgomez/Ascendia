@@ -105,4 +105,25 @@ describe('buildDashboardSummary', () => {
     expect(running.totalThisMonth).toBe(5)
     expect(running.history.some((d) => d.date === '2024-11-10' && d.completed)).toBe(true)
   })
+
+  it('builds active challenge summaries with opponent metadata', async () => {
+    vi.setSystemTime(new Date('2024-11-10T00:00:00Z'))
+    habitFindMock.mockReturnValue(withLean([]))
+    logFindMock.mockReturnValue(withLean([]))
+
+    listUserChallengesMock.mockResolvedValue([{
+      _id: 'c1',
+      title: 'Duelo',
+      type: 'friend',
+      owner: { _id: 'user-1' },
+      opponent: { _id: 'user-2', username: 'Morpheus', profile: { avatar: '/a.png' } },
+      endDate: new Date('2024-11-20T00:00:00Z')
+    }])
+
+    const summary = await buildDashboardSummary('user-1')
+
+    expect(summary.challenges[0].participants).toBe(2)
+    expect(summary.challenges[0].opponentName).toBe('Morpheus')
+    expect(summary.challenges[0].daysLeft).toBeGreaterThan(0)
+  })
 })

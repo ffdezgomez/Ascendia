@@ -14,6 +14,7 @@ const profileModelMock = vi.hoisted(() => ({
 }))
 
 const avatarModelMock = vi.hoisted(() => ({
+  findOne: vi.fn(),
   findOneAndUpdate: vi.fn().mockResolvedValue({})
 }))
 
@@ -55,12 +56,18 @@ vi.mock('multer', () => ({
   memoryStorage: vi.fn(() => ({}))
 }))
 
-function buildApp(session?: any) {
+function buildApp(session?: any, mutateReq?: (req: any) => void) {
   const app = express()
   app.use(express.json())
   if (session !== undefined) {
     app.use((req: any, _res, next) => {
       req.session = session
+      next()
+    })
+  }
+  if (mutateReq) {
+    app.use((req: any, _res, next) => {
+      mutateReq(req)
       next()
     })
   }
@@ -174,5 +181,43 @@ describe('profile router', () => {
     // Depending on storage (disk vs memory->DB) the route sets either a uploads path
     // or an API avatar URL. Accept both formats.
     expect(res.body.avatar).toMatch(/(\/uploads\/avatars\/|\/api\/profile\/avatar\/)/)
+  })
+
+  it('returns 404 when profile user is missing', async () => {
+    userModelMock.findById.mockResolvedValue(null)
+    const app = buildApp({ user: { userId: 'user-1' } })
+    const res = await request(app).get('/profile')
+    expect(res.status).toBe(404)
+  })
+
+  it('returns 404 when updating a non-existing user', async () => {
+    userModelMock.findByIdAndUpdate.mockResolvedValue(null)
+    const app = buildApp({ user: { userId: 'user-1' } })
+    const res = await request(app).put('/profile').send({ user: 'nope' })
+    expect(res.status).toBe(404)
+  })
+
+  it('rejects avatar upload when no file is sent', async () => {
+    const app = buildApp({ user: { userId: 'user-1' } }, (req) => {
+      req.__mockFile = null
+    })
+    const res = await request(app).post('/profile/avatar')
+    expect(res.status).toBe(400)
+    expect(res.body.error).toBe('No se envió ningún archivo')
+  })
+
+  it('returns 404 when avatar upload user is missing', async () => {
+    userModelMock.findById.mockResolvedValue(null)
+    const app = buildApp({ user: { userId: 'user-1' } })
+    const res = await request(app).post('/profile/avatar')
+    expect(res.status).toBe(404)
+  })
+
+  it('redirects to placeholder when avatar data is missing', async () => {
+    avatarModelMock.findOne.mockResolvedValue(null)
+    const app = buildApp()
+    const res = await request(app).get('/profile/avatar/user-1')
+    expect(res.status).toBe(302)
+    expect(res.headers.location).toContain('ui-avatars.com')
   })
 })

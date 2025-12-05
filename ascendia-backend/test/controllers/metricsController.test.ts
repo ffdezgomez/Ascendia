@@ -153,6 +153,17 @@ describe('metricsController', () => {
         })
       )
     })
+
+    it('debe propagar errores al next', async () => {
+      const boom = new Error('fail')
+      vi.mocked(Habit.findOne).mockRejectedValue(boom as any)
+      ;(req as any).currentUserId = 'u1'
+      req.params = { habitId: 'h1' }
+
+      await getHabitMetrics(req as Request, res as Response, next)
+
+      expect(next).toHaveBeenCalledWith(boom)
+    })
   })
 
   describe('getAllHabitsMetrics', () => {
@@ -179,15 +190,23 @@ describe('metricsController', () => {
       } as any)
 
       vi.mocked(Log.find)
-        .mockReturnValueOnce({
-          sort: vi.fn().mockResolvedValue(mockLogs1)
-        } as any)
-        .mockReturnValueOnce({
-          sort: vi.fn().mockResolvedValue(mockLogs2)
-        } as any)
+        .mockResolvedValueOnce(mockLogs1 as any)
+        .mockResolvedValueOnce(mockLogs2 as any)
 
       await getAllHabitsMetrics(req as Request, res as Response, next)
-      // ...resto del test...
+
+      expect(res.json).toHaveBeenCalledWith({
+        period: '7d',
+        summary: {
+          totalHabits: 2,
+          totalLogs: 3,
+          mostActive: expect.objectContaining({ habitId: 'habit1', totalLogs: 2 })
+        },
+        habits: [
+          expect.objectContaining({ habitId: 'habit1', totalLogs: 2, avgValue: 37.5 }),
+          expect.objectContaining({ habitId: 'habit2', totalLogs: 1, avgValue: 60 })
+        ]
+      })
     })
 
     
@@ -215,6 +234,17 @@ describe('metricsController', () => {
           habits: []
         })
       )
+    })
+
+    it('propaga errores al next', async () => {
+      const boom = new Error('list')
+      vi.mocked(Habit.find).mockImplementation(() => { throw boom })
+      ;(req as any).currentUserId = 'u1'
+      req.query = {}
+
+      await getAllHabitsMetrics(req as Request, res as Response, next)
+
+      expect(next).toHaveBeenCalledWith(boom)
     })
   })
 
@@ -313,6 +343,58 @@ describe('metricsController', () => {
           trend: -50 // (1 - 2) / 2 * 100 = -50% de disminución
         })
       )
+    })
+
+    it('debe retornar 404 si el hábito no existe', async () => {
+      const habitId = 'h-not-found'
+      ;(req as any).currentUserId = 'user-1'
+      req.params = { habitId }
+
+      vi.mocked(Habit.findOne).mockResolvedValue(null as any)
+
+      await getComparativeMetrics(req as Request, res as Response, next)
+
+      expect(res.status).toHaveBeenCalledWith(404)
+      expect(res.json).toHaveBeenCalledWith({ error: 'Hábito no encontrado' })
+    })
+
+    it('debe calcular tendencia cuando la semana previa es cero', async () => {
+      const habitId = 'h-trend'
+      ;(req as any).currentUserId = 'user-1'
+      req.params = { habitId }
+
+      vi.mocked(Habit.findOne).mockResolvedValue({ _id: habitId, name: 'Run', logs: [] } as any)
+
+      // Esta semana: 1 log, Semana pasada: 0, Mes: 1
+      vi.mocked(Log.find)
+        .mockResolvedValueOnce([{ value: 10 }] as any)
+        .mockResolvedValueOnce([] as any)
+        .mockResolvedValueOnce([{ value: 10 }] as any)
+
+      await getComparativeMetrics(req as Request, res as Response, next)
+
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          trend: 100
+        })
+      )
+    })
+
+    it('debe devolver tendencia 0 cuando no hay logs en ninguna semana', async () => {
+      const habitId = 'h-trend-zero'
+      ;(req as any).currentUserId = 'user-1'
+      req.params = { habitId }
+
+      vi.mocked(Habit.findOne).mockResolvedValue({ _id: habitId, name: 'None', logs: [] } as any)
+
+      vi.mocked(Log.find)
+        .mockResolvedValueOnce([] as any)
+        .mockResolvedValueOnce([] as any)
+        .mockResolvedValueOnce([] as any)
+
+      await getComparativeMetrics(req as Request, res as Response, next)
+
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ trend: 0 }))
     })
   })
 

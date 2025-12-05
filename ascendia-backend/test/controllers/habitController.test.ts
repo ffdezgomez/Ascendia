@@ -134,6 +134,19 @@ describe('habitController', () => {
     expect(next).not.toHaveBeenCalled()
   })
 
+  it('forwards errors when listing habits', async () => {
+    const boom = new Error('db fail')
+    habitModelMock.find.mockImplementation(() => { throw boom })
+
+    const req: any = { currentUserId: 'user-err' }
+    const res = createMockRes()
+    const next = vi.fn()
+
+    await getHabits(req, res as any, next)
+
+    expect(next).toHaveBeenCalledWith(boom)
+  })
+
   it('returns 404 when requesting a habit that does not belong to the user', async () => {
     habitModelMock.findOne.mockReturnValue(chainPopulate(null))
 
@@ -147,5 +160,87 @@ describe('habitController', () => {
     expect(res.status).toHaveBeenCalledWith(404)
     expect(res.json).toHaveBeenCalledWith({ error: 'Hábito no encontrado o no autorizado' })
     expect(next).not.toHaveBeenCalled()
+  })
+
+  it('returns a habit when it exists for the user', async () => {
+    const habitDoc = { _id: 'h-ok', name: 'Ok' }
+    habitModelMock.findOne.mockReturnValue(chainPopulate(habitDoc))
+
+    const req: any = { currentUserId: 'user-7', params: { id: 'h-ok' } }
+    const res = createMockRes()
+    const next = vi.fn()
+
+    await getHabitById(req, res as any, next)
+
+    expect(res.json).toHaveBeenCalledWith(habitDoc)
+    expect(next).not.toHaveBeenCalled()
+  })
+
+  it('returns 404 when update target is missing', async () => {
+    habitModelMock.findOneAndUpdate.mockResolvedValue(null)
+
+    const req: any = { currentUserId: 'user-4', params: { id: 'h404' }, body: { name: 'Nueva' } }
+    const res = createMockRes()
+    const next = vi.fn()
+
+    await updateHabit(req, res as any, next)
+
+    expect(res.status).toHaveBeenCalledWith(404)
+    expect(res.json).toHaveBeenCalledWith({ message: 'Hábito no encontrado' })
+    expect(next).not.toHaveBeenCalled()
+  })
+
+  it('deletes a habit and removes the user reference', async () => {
+    const deleted = { _id: 'h-del' }
+    habitModelMock.findOneAndDelete.mockResolvedValue(deleted)
+
+    const req: any = { currentUserId: 'user-8', params: { id: 'h-del' } }
+    const res = createMockRes()
+    const next = vi.fn()
+
+    await deleteHabit(req, res as any, next)
+
+    expect(userModelMock.findByIdAndUpdate).toHaveBeenCalledWith('user-8', { $pull: { habits: 'h-del' } })
+    expect(res.json).toHaveBeenCalledWith({ message: 'Hábito eliminado' })
+    expect(next).not.toHaveBeenCalled()
+  })
+
+  it('forwards errors when updating', async () => {
+    const err = new Error('update boom')
+    habitModelMock.findOneAndUpdate.mockRejectedValue(err)
+
+    const req: any = { currentUserId: 'user-err', params: { id: 'h1' }, body: {} }
+    const res = createMockRes()
+    const next = vi.fn()
+
+    await updateHabit(req, res as any, next)
+
+    expect(next).toHaveBeenCalledWith(err)
+  })
+
+  it('forwards errors when deleting', async () => {
+    const err = new Error('delete boom')
+    habitModelMock.findOneAndDelete.mockRejectedValue(err)
+
+    const req: any = { currentUserId: 'user-err', params: { id: 'h1' } }
+    const res = createMockRes()
+    const next = vi.fn()
+
+    await deleteHabit(req, res as any, next)
+
+    expect(next).toHaveBeenCalledWith(err)
+  })
+
+  it('forwards errors to next when create fails', async () => {
+    const err = new Error('db down')
+    habitModelMock.create.mockRejectedValue(err)
+
+    const req: any = { currentUserId: 'user-1', body: { name: 'fail', type: 'number', unit: 'kg' } }
+    const res = createMockRes()
+    const next = vi.fn()
+
+    await createHabit(req, res as any, next)
+
+    expect(next).toHaveBeenCalledWith(err)
   })
 })

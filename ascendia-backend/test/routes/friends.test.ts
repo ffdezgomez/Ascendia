@@ -21,7 +21,9 @@ const friendRequestModelMock = vi.hoisted(() => ({
   find: vi.fn(),
   findOne: vi.fn(),
   findById: vi.fn(),
-  create: vi.fn()
+  create: vi.fn(),
+  deleteOne: vi.fn(),
+  deleteMany: vi.fn()
 }))
 
 const profileModelMock = vi.hoisted(() => ({
@@ -93,6 +95,8 @@ describe('friends router', () => {
     habitModelMock.find.mockReturnValue(mockQuery([]))
     habitModelMock.findOne.mockReturnValue(mockQuery(null))
     buildHabitSummariesMock.mockResolvedValue([])
+    friendRequestModelMock.deleteOne.mockResolvedValue({ acknowledged: true, deletedCount: 1 })
+    friendRequestModelMock.deleteMany.mockResolvedValue({ acknowledged: true, deletedCount: 1 })
   })
 
   it('returns overview data combining friends and requests', async () => {
@@ -352,5 +356,150 @@ describe('friends router', () => {
     expect(res.body.user?.username).toBe('neo')
     expect(res.body.alreadyFriends).toBe(false)
     expect(res.body.pendingDirection).toBeNull()
+  })
+
+  it('validates comparison candidate preconditions', async () => {
+    const app = buildApp({ user: { userId: 'user-1' } })
+    const missingRes = await request(app).get('/friends/friend-1/comparisons/candidates')
+    expect(missingRes.status).toBe(400)
+
+    userModelMock.findById.mockReturnValueOnce(mockQuery(null))
+    const notFoundRes = await request(app).get('/friends/friend-1/comparisons/candidates?friendHabitId=h1')
+    expect(notFoundRes.status).toBe(404)
+
+    userModelMock.findById.mockReturnValueOnce(mockQuery({ friends: [] }))
+    userModelMock.findById.mockReturnValueOnce(mockQuery({ _id: 'friend-1' }))
+    habitModelMock.findOne.mockReturnValueOnce(mockQuery({ _id: 'fh1', unit: 'h', type: 'time' }))
+    const notFriendsRes = await request(app).get('/friends/friend-1/comparisons/candidates?friendHabitId=h1')
+    expect(notFriendsRes.status).toBe(403)
+
+    userModelMock.findById.mockReturnValueOnce(mockQuery({ friends: ['friend-1'] }))
+    userModelMock.findById.mockReturnValueOnce(mockQuery({ _id: 'friend-1' }))
+    habitModelMock.findOne.mockReturnValueOnce(mockQuery(null))
+    const missingHabitRes = await request(app).get('/friends/friend-1/comparisons/candidates?friendHabitId=h1')
+    expect(missingHabitRes.status).toBe(404)
+  })
+
+  it('checks comparison creation edge cases', async () => {
+    const app = buildApp({ user: { userId: 'user-1' } })
+    const missingRes = await request(app)
+      .post('/friends/friend-1/comparisons')
+      .send({ friendHabitId: '', ownerHabitId: '' })
+    expect(missingRes.status).toBe(400)
+
+    userModelMock.findById.mockReturnValueOnce(mockQuery(null))
+    const notFoundRes = await request(app)
+      .post('/friends/friend-1/comparisons')
+      .send({ friendHabitId: 'fh1', ownerHabitId: 'oh1' })
+    expect(notFoundRes.status).toBe(404)
+
+    userModelMock.findById.mockReturnValueOnce(mockQuery({ friends: [] }))
+    userModelMock.findById.mockReturnValueOnce(mockQuery({ _id: 'friend-1' }))
+    habitModelMock.findOne.mockReturnValueOnce(mockQuery({ _id: 'fh1', unit: 'h', type: 'time' }))
+    habitModelMock.findOne.mockReturnValueOnce(mockQuery({ _id: 'oh1', unit: 'h', type: 'time' }))
+    const notFriendsRes = await request(app)
+      .post('/friends/friend-1/comparisons')
+      .send({ friendHabitId: 'fh1', ownerHabitId: 'oh1' })
+    expect(notFriendsRes.status).toBe(403)
+
+    userModelMock.findById.mockReturnValueOnce(mockQuery({ friends: ['friend-1'] }))
+    userModelMock.findById.mockReturnValueOnce(mockQuery({ _id: 'friend-1' }))
+    habitModelMock.findOne.mockReturnValueOnce(mockQuery(null))
+    habitModelMock.findOne.mockReturnValueOnce(mockQuery({ _id: 'oh1', unit: 'h', type: 'time' }))
+    const missingHabitRes = await request(app)
+      .post('/friends/friend-1/comparisons')
+      .send({ friendHabitId: 'fh1', ownerHabitId: 'oh1' })
+    expect(missingHabitRes.status).toBe(404)
+
+    userModelMock.findById.mockReturnValueOnce(mockQuery({ friends: ['friend-1'] }))
+    userModelMock.findById.mockReturnValueOnce(mockQuery({ _id: 'friend-1' }))
+    habitModelMock.findOne.mockReturnValueOnce(mockQuery({ _id: 'fh1', unit: 'h', type: 'time' }))
+    habitModelMock.findOne.mockReturnValueOnce(mockQuery({ _id: 'oh1', unit: 'h', type: 'time' }))
+    habitComparisonModelMock.findOne.mockReturnValueOnce(mockQuery({ _id: 'cmp-1' }))
+    const existingRes = await request(app)
+      .post('/friends/friend-1/comparisons')
+      .send({ friendHabitId: 'fh1', ownerHabitId: 'oh1' })
+    expect(existingRes.status).toBe(409)
+  })
+
+  it('returns 404 when deleting a missing comparison', async () => {
+    const app = buildApp({ user: { userId: 'user-1' } })
+    habitComparisonModelMock.findById.mockReturnValueOnce(mockQuery(null))
+    const res = await request(app).delete('/friends/friend-1/comparisons/cmp-404')
+    expect(res.status).toBe(404)
+  })
+
+  it('handles missing users in search and request flows', async () => {
+    userModelMock.findById.mockReturnValueOnce(mockQuery(null))
+    const app = buildApp({ user: { userId: 'user-1' } })
+    const searchRes = await request(app).get('/friends/search?username=neo')
+    expect(searchRes.status).toBe(404)
+
+    const missingUsername = await request(app).post('/friends/requests').send({})
+    expect(missingUsername.status).toBe(400)
+  })
+
+  it('covers friend request edge cases', async () => {
+    const app = buildApp({ user: { userId: 'user-1', username: 'neo' } })
+
+    userModelMock.findById.mockReturnValueOnce(mockQuery({ _id: 'user-1', friends: [] }))
+    userModelMock.findOne.mockReturnValueOnce(mockQuery({ _id: 'user-1', username: 'neo', profile: { avatar: '' } }))
+    friendRequestModelMock.findOne.mockReturnValue(mockQuery(null))
+    profileModelMock.find.mockReturnValue(mockQuery([]))
+    const selfRes = await request(app).post('/friends/requests').send({ username: 'neo' })
+    expect(selfRes.status).toBe(400)
+
+    userModelMock.findById.mockReturnValueOnce(mockQuery({ _id: 'user-1', friends: ['user-2'] }))
+    userModelMock.findOne.mockReturnValueOnce(mockQuery({ _id: 'user-2', username: 'morpheus', profile: { avatar: '' } }))
+    const alreadyFriends = await request(app).post('/friends/requests').send({ username: 'morpheus' })
+    expect(alreadyFriends.status).toBe(409)
+
+    userModelMock.findById.mockReturnValueOnce(mockQuery({ _id: 'user-1', friends: [] }))
+    userModelMock.findOne.mockReturnValueOnce(mockQuery({ _id: 'user-3', username: 'trinity', profile: { avatar: '' } }))
+    friendRequestModelMock.findOne.mockReturnValueOnce(mockQuery({ _id: 'pending-1' }))
+    const pendingRes = await request(app).post('/friends/requests').send({ username: 'trinity' })
+    expect(pendingRes.status).toBe(409)
+
+    userModelMock.findById.mockReturnValueOnce(mockQuery({ _id: 'user-1', friends: [] }))
+    userModelMock.findOne.mockReturnValueOnce(mockQuery({ _id: 'user-4', username: 'smith', profile: { avatar: '' } }))
+    friendRequestModelMock.findOne.mockReturnValueOnce(mockQuery(null))
+    friendRequestModelMock.create.mockRejectedValueOnce({ code: 11000 })
+    const duplicateRes = await request(app).post('/friends/requests').send({ username: 'smith' })
+    expect(duplicateRes.status).toBe(409)
+  })
+
+  it('validates accept/decline flows', async () => {
+    const app = buildApp({ user: { userId: 'user-1', username: 'neo' } })
+
+    friendRequestModelMock.findById.mockResolvedValueOnce(null)
+    const missingReq = await request(app).post('/friends/requests/req-1/accept')
+    expect(missingReq.status).toBe(404)
+
+    friendRequestModelMock.findById.mockResolvedValueOnce({ _id: 'req-2', from: 'user-2', to: 'user-3' })
+    const forbiddenAccept = await request(app).post('/friends/requests/req-2/accept')
+    expect(forbiddenAccept.status).toBe(403)
+
+    friendRequestModelMock.findById.mockResolvedValueOnce({
+      _id: 'req-3',
+      from: 'user-2',
+      to: 'user-3',
+      deleteOne: vi.fn().mockResolvedValue(undefined)
+    })
+    const forbiddenDecline = await request(app).post('/friends/requests/req-3/decline')
+    expect(forbiddenDecline.status).toBe(403)
+  })
+
+  it('handles delete friendship errors', async () => {
+    const app = buildApp({ user: { userId: 'user-1' } })
+
+    userModelMock.findById.mockReturnValueOnce(mockQuery(null))
+    userModelMock.findById.mockReturnValueOnce(mockQuery({ _id: 'friend-1', friends: [] }))
+    const notFoundRes = await request(app).delete('/friends/friend-1')
+    expect(notFoundRes.status).toBe(404)
+
+    userModelMock.findById.mockReturnValueOnce(mockQuery({ _id: 'user-1', friends: [] }))
+    userModelMock.findById.mockReturnValueOnce(mockQuery({ _id: 'friend-1', friends: [] }))
+    const notFriendsRes = await request(app).delete('/friends/friend-1')
+    expect(notFriendsRes.status).toBe(400)
   })
 })

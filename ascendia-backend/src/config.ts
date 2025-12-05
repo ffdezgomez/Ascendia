@@ -3,7 +3,7 @@ export const {
   PORT = "5000",
   SALT_ROUNDS = "10",
   SECRET_JWT_KEY = "2e6037bd4c21449adc9177194b94fb602edf5ed44733f0812aca5b3b7a09c54e",
-  MONGODB_URI = "mongodb+srv://admin:spqr1453@ascendiadb.ayvxbwm.mongodb.net",
+  MONGODB_URI,
   NODE_ENV = "development",
   MONGODB_DBNAME = "ascendia-db",
   FRONTEND_URL = "http://localhost:3000",

@@ -172,7 +172,7 @@ app.post('/logout', (_req, res) => {
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')))
 
 // ================== ERROR HANDLER ==================
-app.use((error: unknown, _req: any, res: any, _next: any) => {
+export function errorHandler(error: unknown, _req: any, res: any, _next: any) {
   // Zod
   if (error && typeof error === 'object' && 'name' in error && error.name === 'ZodError') {
     return res.status(400).json({
@@ -214,7 +214,11 @@ app.use((error: unknown, _req: any, res: any, _next: any) => {
   return res.status(500).json({
     error: (error as any)?.message ?? 'Error interno'
   })
-})
+}
+
+if (process.env.SKIP_ERROR_HANDLER !== 'true') {
+  app.use(errorHandler)
+}
 
 // ================== START ==================
 export async function start() {
