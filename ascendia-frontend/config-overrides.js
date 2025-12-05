@@ -22,6 +22,16 @@ module.exports = {
         : pattern
     )
 
+    // Keep default ignore for node_modules only; measure real coverage on app code
+    config.coveragePathIgnorePatterns = ['/node_modules/']
+
+    // Force a stable mock for react-router to avoid ESM resolution issues in Jest
+    config.moduleNameMapper = {
+      ...config.moduleNameMapper,
+      '^react-router-dom$': '<rootDir>/test/__mocks__/react-router-dom.tsx',
+      '^react-router$': '<rootDir>/test/__mocks__/react-router-dom.tsx'
+    }
+
     return config
   }
 }
