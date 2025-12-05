@@ -1,33 +1,12 @@
 // src/routes/profile.ts
 import { Router } from 'express';
+import multer, { memoryStorage } from 'multer';
+import { requireAuth } from '../middleware/requireAuth.js';
 import User from '../models/user.js';
 import Profile from '../models/profile.js';
 import Avatar from '../models/avatar.js';
-import multer, { memoryStorage } from 'multer';
 
 const r = Router();
-
-/**
- * Middleware simple para exigir autenticación.
- * Usa req.session.user que rellenas en index.ts a partir del JWT.
- */
-function requireAuth(req: any, res: any, next: any) {
-  if (process.env.BYPASS_AUTH === 'true') {
-    return next()
-  }
-
-  // Limit this guard to profile routes only so other paths (e.g. test hooks) are untouched
-  if (!req.path?.startsWith('/profile')) {
-    return next()
-  }
-
-  const sessionUser = req.session?.user;
-  if (!sessionUser || !sessionUser.userId) {
-    return res.status(401).json({ error: 'No autenticicado' });
-  }
-  req.currentUserId = sessionUser.userId;
-  next();
-}
 
 /* =========================================================================
    Configuración subida de avatar (multer) -> MEMORIA
@@ -61,7 +40,7 @@ r.get('/profile/avatar/:userId', async (req: any, res: any) => {
 });
 
 // A partir de aquí, todas las rutas de este router exigen login
-r.use(requireAuth);
+r.use(requireAuth({ basePath: '/profile', errorMessage: 'No autenticicado' }));
 
 /* =========================================================================
    GET /profile  → devuelve el perfil del usuario autenticado

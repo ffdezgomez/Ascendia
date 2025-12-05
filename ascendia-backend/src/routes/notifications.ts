@@ -1,18 +1,10 @@
 import { Router } from 'express'
+import { requireAuth } from '../middleware/requireAuth.js'
 import { deleteNotification, listNotifications, markAllNotificationsRead, markNotificationRead } from '../services/notifications'
 
 const r = Router()
 
-function requireAuth(req: any, res: any, next: any) {
-  const sessionUser = req.session?.user
-  if (!sessionUser?.userId) {
-    return res.status(401).json({ error: 'No autenticado' })
-  }
-  req.currentUserId = sessionUser.userId
-  next()
-}
-
-r.use(requireAuth)
+r.use(requireAuth({ allowBypass: false }))
 
 r.get('/', async (req: any, res: any, next: any) => {
   try {

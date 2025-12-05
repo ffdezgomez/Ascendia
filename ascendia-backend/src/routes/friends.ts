@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { requireAuth } from '../middleware/requireAuth.js'
 import User from '../models/user.js'
 import FriendRequest from '../models/friendRequest.js'
 import Profile from '../models/profile.js'
@@ -16,25 +17,7 @@ type PublicUser = {
   avatar: string
 }
 
-function requireAuth(req: any, res: any, next: any) {
-  if (process.env.BYPASS_AUTH === 'true') {
-    return next()
-  }
-
-  // Only guard friends routes; let unrelated paths proceed (tests, other routers)
-  if (!req.path?.startsWith('/friends')) {
-    return next()
-  }
-
-  const sessionUser = req.session?.user
-  if (!sessionUser || !sessionUser.userId) {
-    return res.status(401).json({ error: 'No autenticado' })
-  }
-  req.currentUserId = sessionUser.userId
-  next()
-}
-
-r.use(requireAuth)
+r.use(requireAuth({ basePath: '/friends' }))
 
 function escapeRegex(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
