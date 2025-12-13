@@ -1,0 +1,115 @@
+name: E2E Tests
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+  pull_request:
+    branches:
+      - develop
+      - main
+
+jobs:
+  e2e:
+    name: Selenium E2E Tests
+    runs-on: ubuntu-latest
+
+    services:
+      mongo:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        env:
+          MONGO_INITDB_ROOT_USERNAME: root
+          MONGO_INITDB_ROOT_PASSWORD: example
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: npm
+          cache-dependency-path: |
+            ascendia-backend/package-lock.json
+            ascendia-frontend/package-lock.json
+
+      - name: Install backend dependencies
+        working-directory: ascendia-backend
+        run: npm ci
+
+      - name: Build backend
+        working-directory: ascendia-backend
+        run: npm run build
+
+      - name: Install frontend dependencies
+        working-directory: ascendia-frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: ascendia-frontend
+        run: npm run build
+
+      - name: Start backend server
+        working-directory: ascendia-backend
+        env:
+          NODE_ENV: test
+          PORT: 5000
+          MONGODB_URI: mongodb://root:example@localhost:27017/ascendia-e2e?authSource=admin
+          MONGODB_DBNAME: ascendia-e2e
+          FRONTEND_URL: http://localhost:3000
+        run: |
+          npm run start &
+          echo $! > backend.pid
+          npx --yes wait-on tcp:5000
+
+      - name: Start frontend server
+        working-directory: ascendia-frontend
+        env:
+          PORT: 3000
+        run: |
+          npx --yes serve -s build -l 3000 &
+          echo $! > frontend.pid
+          npx --yes wait-on http://localhost:3000
+
+      - name: Install Chrome
+        run: |
+          wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+          sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+
+      - name: Install ChromeDriver
+        run: npm install -g chromedriver
+
+      - name: Run E2E Tests
+        env:
+          CI: true
+          E2E_BROWSER: chrome
+        run: npx --yes -p mocha -p selenium-webdriver mocha e2e/login.spec.js --timeout 60000
+
+      - name: Stop servers
+        if: always()
+        run: |
+          if [ -f ascendia-backend/backend.pid ]; then
+            kill $(cat ascendia-backend/backend.pid) || true
+          fi
+          if [ -f ascendia-frontend/frontend.pid ]; then
+            kill $(cat ascendia-frontend/frontend.pid) || true
+          fi
+
+      - name: Upload E2E artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-output
+          path: e2e/
+          retention-days: 7
