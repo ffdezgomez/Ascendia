@@ -1,5 +1,5 @@
 import express from 'express'
-import * as habitController from '../controllers/habitController'
+import * as habitController from '../controllers/habitController.js'
 import type { Request, Response, NextFunction } from 'express'
 const router = express.Router()
 

@@ -1,6 +1,6 @@
 import { Router } from 'express'
-import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI, SECRET_JWT_KEY, FRONTEND_URL, NODE_ENV } from '../config'
-import { UserRepository } from '../models/user'
+import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI, SECRET_JWT_KEY, FRONTEND_URL, NODE_ENV } from '../config.js'
+import { UserRepository } from '../models/user.js'
 import jwt from 'jsonwebtoken'
 
 const router = Router()

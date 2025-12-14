@@ -3,9 +3,9 @@ import HabitChallenge from '../models/habitChallenge.js'
 import Log from '../models/log.js'
 import Habit from '../models/habit.js'
 import User from '../models/user.js'
-import type { IChallenge, ChallengeStatus, ChallengeType } from '../types/challenge'
-import type { IHabitChallenge, HabitChallengeSide, PendingHabitDraft } from '../types/habitChallenge'
-import type { IHabit } from '../types/habit'
+import type { IChallenge, ChallengeStatus, ChallengeType } from '../types/challenge.js'
+import type { IHabitChallenge, HabitChallengeSide, PendingHabitDraft } from '../types/habitChallenge.js'
+import type { IHabit } from '../types/habit.js'
 import { Types } from 'mongoose'
 
 const HABIT_CATEGORIES = ['fitness', 'study', 'health', 'personal', 'work', 'creativity', 'spirituality', 'home'] as const

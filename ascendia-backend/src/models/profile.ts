@@ -1,6 +1,6 @@
 // models/Profile.ts
 import { Schema, model } from "mongoose"
-import type { IProfile } from "../types/profile"
+import type { IProfile } from "../types/profile.js"
 
 const ProfileSchema = new Schema<IProfile>({
   user: { type: Schema.Types.ObjectId, ref: "User", required: true, unique: true },

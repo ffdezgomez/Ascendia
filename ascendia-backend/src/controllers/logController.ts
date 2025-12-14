@@ -1,6 +1,6 @@
 // controllers/logController.ts
-import Log from '../models/log'
-import Habit from '../models/habit'
+import Log from '../models/log.js'
+import Habit from '../models/habit.js'
 import type { Request, Response, NextFunction } from 'express'
 
 // Crear un log (y añadirlo al habit correspondiente)

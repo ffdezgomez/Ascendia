@@ -1,5 +1,5 @@
 import type { Document, Types } from 'mongoose'
-import type { IHabitChallenge } from './habitChallenge'
+import type { IHabitChallenge } from './habitChallenge.js'
 
 export type ChallengeType = 'personal' | 'friend'
 

@@ -1,10 +1,10 @@
 import 'dotenv/config';
 import fs from 'fs';
 import path from 'path';
-import { connectDB } from '../db/mongoose';
-import Avatar from '../models/avatar';
-import Profile from '../models/profile';
-import User from '../models/user';
+import { connectDB } from '../db/mongoose.js';
+import Avatar from '../models/avatar.js';
+import Profile from '../models/profile.js';
+import User from '../models/user.js';
 import mongoose from 'mongoose';
 
 async function migrate() {

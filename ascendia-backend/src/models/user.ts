@@ -1,6 +1,6 @@
 // models/User.ts
 import { Schema, model } from "mongoose"
-import type { IUser } from "../types/user"
+import type { IUser } from "../types/user.js"
 import { z } from "zod"
 import bcryptjs from "bcryptjs"
 import { saltRoundsNum, NODE_ENV } from "../config.js"

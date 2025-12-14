@@ -1,6 +1,6 @@
 // src/controllers/habitController.ts
-import Habit from '../models/habit'
-import User from '../models/user'
+import Habit from '../models/habit.js'
+import User from '../models/user.js'
 import type { Request, Response, NextFunction } from 'express'
 
 const ALLOWED_CATEGORIES = [

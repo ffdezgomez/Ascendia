@@ -1,5 +1,5 @@
 import { Schema, model } from 'mongoose'
-import type { IChallenge } from '../types/challenge'
+import type { IChallenge } from '../types/challenge.js'
 
 const ChallengeSchema = new Schema<IChallenge>({
   title: { type: String, default: '' },

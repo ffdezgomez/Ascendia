@@ -1,5 +1,5 @@
 import { Schema, model } from 'mongoose'
-import type { IHabitChallenge } from '../types/habitChallenge'
+import type { IHabitChallenge } from '../types/habitChallenge.js'
 
 const PendingHabitSchema = new Schema({
   name: { type: String, required: true },

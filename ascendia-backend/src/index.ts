@@ -7,22 +7,22 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import http from 'node:http'
 
-import { PORT, SECRET_JWT_KEY, FRONTEND_URL, NODE_ENV } from './config'
-import { connectDB } from './db/mongoose'
-import { UserRepository } from './models/user'
-import { sendVerificationEmail } from './services/emailService'
-import { initSocketServer } from './realtime/socket'
+import { PORT, SECRET_JWT_KEY, FRONTEND_URL, NODE_ENV } from './config.js'
+import { connectDB } from './db/mongoose.js'
+import { UserRepository } from './models/user.js'
+import { sendVerificationEmail } from './services/emailService.js'
+import { initSocketServer } from './realtime/socket.js'
 
-import profileRouter from './routes/profile'
-import dashboardRouter from './routes/dashboard'
-import friendsRouter from './routes/friends'
-import habitRouter from './routes/habit'
-import logRouter from './routes/log'
-import metricsRouter from './routes/metrics'
-import authRouter from './routes/auth'
-import challengesRouter from './routes/challenges'
-import oauthRouter from './routes/oauth'
-import notificationsRouter from './routes/notifications'
+import profileRouter from './routes/profile.js'
+import dashboardRouter from './routes/dashboard.js'
+import friendsRouter from './routes/friends.js'
+import habitRouter from './routes/habit.js'
+import logRouter from './routes/log.js'
+import metricsRouter from './routes/metrics.js'
+import authRouter from './routes/auth.js'
+import challengesRouter from './routes/challenges.js'
+import oauthRouter from './routes/oauth.js'
+import notificationsRouter from './routes/notifications.js'
 
 // Esto dejarlo, es para que el usuario pueda subir la imagen de perfil
 const __filename = fileURLToPath(import.meta.url)
@@ -121,7 +121,7 @@ app.post('/login', async (req, res, next) => {
     const user = await UserRepository.login({ username, password })
 
     // Verificar si el email está verificado
-    const User = (await import('./models/user')).default
+    const User = (await import('./models/user.js')).default
     const fullUser = await User.findById(user._id)
 
     if (!fullUser?.isVerified) {

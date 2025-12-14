@@ -1,5 +1,5 @@
 import { Schema, model } from "mongoose"
-import type { ILog } from "../types/log"
+import type { ILog } from "../types/log.js"
 
 const LogSchema = new Schema<ILog>({
   user: { type: Schema.Types.ObjectId, ref: "User", required: true },

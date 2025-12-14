@@ -1,6 +1,6 @@
 import type { Document, Types } from 'mongoose'
-import type { ChallengeType } from './challenge'
-import type { IHabit } from './habit'
+import type { ChallengeType } from './challenge.js'
+import type { IHabit } from './habit.js'
 
 export type HabitChallengeSide = 'owner' | 'challenger'
 

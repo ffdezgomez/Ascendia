@@ -9,9 +9,9 @@ import {
   requestFinishChallenge,
   respondToChallenge
 } from '../services/challenges.js'
-import { createNotification } from '../services/notifications'
-import type { ChallengeStatus, ChallengeType } from '../types/challenge'
-import type { CreateDisciplineInput, HabitDraftInput, RespondChallengeInput } from '../services/challenges'
+import { createNotification } from '../services/notifications.js'
+import type { ChallengeStatus, ChallengeType } from '../types/challenge.js'
+import type { CreateDisciplineInput, HabitDraftInput, RespondChallengeInput } from '../services/challenges.js'
 
 const STATUS_VALUES: ChallengeStatus[] = ['pending', 'active', 'pending_finish', 'finished', 'rejected', 'cancelled']
 const TYPE_VALUES: ChallengeType[] = ['personal', 'friend']

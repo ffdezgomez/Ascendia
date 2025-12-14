@@ -6,7 +6,7 @@ import Habit from '../models/habit.js'
 import HabitComparison from '../models/habitComparison.js'
 import { buildDashboardSummary, buildHabitSummaries } from '../services/dashboardSummary.js'
 import type { HabitSummary } from '../services/dashboardSummary.js'
-import { createNotification } from '../services/notifications'
+import { createNotification } from '../services/notifications.js'
 
 const r = Router()
 

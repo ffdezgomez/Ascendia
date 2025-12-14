@@ -1,5 +1,5 @@
 import { Schema, model } from 'mongoose'
-import type { IHabitComparison } from '../types/habitComparison'
+import type { IHabitComparison } from '../types/habitComparison.js'
 
 const HabitComparisonSchema = new Schema<IHabitComparison>({
   owner: { type: Schema.Types.ObjectId, ref: 'User', required: true },

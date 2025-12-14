@@ -8,7 +8,7 @@ import {
   declineFinishHandler,
   requestFinishHandler,
   respondChallengeHandler
-} from '../controllers/challengeController'
+} from '../controllers/challengeController.js'
 
 type AuthedRequest = Request & { currentUserId: string; session?: any }
 type AuthedHandler = (req: AuthedRequest, res: Response, next: NextFunction) => Promise<unknown> | unknown

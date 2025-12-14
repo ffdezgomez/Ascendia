@@ -1,6 +1,6 @@
-import Notification from '../models/notification'
-import type { NotificationDTO, NotificationMetadata, NotificationType } from '../types/notification'
-import { emitToUser } from '../realtime/socket'
+import Notification from '../models/notification.js'
+import type { NotificationDTO, NotificationMetadata, NotificationType } from '../types/notification.js'
+import { emitToUser } from '../realtime/socket.js'
 
 const TITLE_LIMIT = 120
 const MESSAGE_LIMIT = 280

@@ -1,7 +1,7 @@
 import type { Server as HTTPServer } from 'http'
 import { Server } from 'socket.io'
 import jwt from 'jsonwebtoken'
-import { SECRET_JWT_KEY } from '../config'
+import { SECRET_JWT_KEY } from '../config.js'
 
 let io: Server | null = null
 

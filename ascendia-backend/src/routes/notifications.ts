@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { deleteNotification, listNotifications, markAllNotificationsRead, markNotificationRead } from '../services/notifications'
+import { deleteNotification, listNotifications, markAllNotificationsRead, markNotificationRead } from '../services/notifications.js'
 
 const r = Router()
 

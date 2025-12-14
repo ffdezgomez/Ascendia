@@ -1,7 +1,7 @@
 // src/controllers/authController.ts
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
-import User from "../models/user";
+import User from "../models/user.js";
 import type { Request, Response, NextFunction } from "express";
 import nodemailer from "nodemailer";
 

@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from 'express'
-import Log  from '../models/log'
-import Habit from '../models/habit'
-import { getEmoji } from '../services/dashboardSummary'
+import Log  from '../models/log.js'
+import Habit from '../models/habit.js'
+import { getEmoji } from '../services/dashboardSummary.js'
 import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays } from 'date-fns'
 
 // Métricas de un hábito específico
