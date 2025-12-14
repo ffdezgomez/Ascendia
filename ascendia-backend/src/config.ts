@@ -6,7 +6,7 @@ export const {
   MONGODB_URI = "",
   NODE_ENV = "development",
   MONGODB_DBNAME = "ascendia-db",
-  FRONTEND_URL = "http://localhost:3000",
+  FRONTEND_URL = "",
 
   // === Email ===
   SMTP_HOST = "smtp.gmail.com",
@@ -19,7 +19,7 @@ export const {
   // === OAuth ===
   GOOGLE_CLIENT_ID = "",
   GOOGLE_CLIENT_SECRET = "",
-  GOOGLE_REDIRECT_URI = "http://localhost:5000/auth/google/callback"
+  GOOGLE_REDIRECT_URI = ""
 } = process.env;
 
 export const smtpConfig = {
@@ -30,4 +30,5 @@ export const smtpConfig = {
 };
 
 export const emailFrom = EMAIL_FROM || `Ascendia <${SMTP_USER}>`;
+
 export const saltRoundsNum = Number(SALT_ROUNDS);
