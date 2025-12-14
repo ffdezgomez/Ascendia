@@ -99,8 +99,8 @@ router.get('/google/callback', async (req, res) => {
       maxAge: 1000 * 60 * 60
     })
 
-    // e) Redirigir al dashboard (LandingPage del usuario logueado)
-    res.redirect(`${FRONTEND_URL}/`)
+    // e) Redirigir a la página de perfil para mantener el comportamiento anterior
+    res.redirect(`${FRONTEND_URL}/profile`)
 
   } catch (error) {
     console.error('OAuth Error:', error)
