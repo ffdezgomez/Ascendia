@@ -4,6 +4,13 @@ import { UserRepository } from '../models/user.js'
 import jwt from 'jsonwebtoken'
 
 const router = Router()
+const isProduction = NODE_ENV === 'production'
+const authCookieOptions = {
+  httpOnly: true,
+  secure: isProduction,
+  sameSite: isProduction ? 'none' as const : 'lax' as const,
+  maxAge: 1000 * 60 * 60
+}
 
 // 1. Redirigir al usuario a Google
 router.get('/google', (req, res) => {
@@ -92,12 +99,7 @@ router.get('/google/callback', async (req, res) => {
       { expiresIn: '1h' }
     )
 
-    res.cookie('access_token', token, {
-      httpOnly: true,
-      secure: NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 1000 * 60 * 60
-    })
+    res.cookie('access_token', token, authCookieOptions)
 
     // e) Redirigir a la página de perfil para mantener el comportamiento anterior
     res.redirect(`${FRONTEND_URL}/profile`)

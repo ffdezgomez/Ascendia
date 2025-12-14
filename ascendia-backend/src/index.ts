@@ -29,6 +29,14 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 const app = express()
+const isProduction = NODE_ENV === 'production'
+
+const authCookieOptions = {
+  httpOnly: true,
+  secure: isProduction,
+  sameSite: isProduction ? 'none' as const : 'lax' as const,
+  maxAge: 1000 * 60 * 60
+}
 
 // ================== CORS ==================
 const allowedOrigins = new Set<string>(
@@ -135,12 +143,7 @@ app.post('/login', async (req, res, next) => {
     )
 
     res
-      .cookie('access_token', token, {
-        httpOnly: true,
-        secure: NODE_ENV === 'production', // HTTPS SOLO en prod
-        sameSite: 'lax',                  // evita problemas en dev
-        maxAge: 1000 * 60 * 60
-      })
+      .cookie('access_token', token, authCookieOptions)
       .status(200)
       .json({ user, token })
   } catch (error) {
@@ -162,7 +165,11 @@ app.use('/notifications', notificationsRouter)
 
 // ================== LOGOUT ==================
 app.post('/logout', (_req, res) => {
-  res.clearCookie('access_token').json({
+  res.clearCookie('access_token', {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax'
+  }).json({
     success: true,
     message: 'Sesión cerrada'
   })
