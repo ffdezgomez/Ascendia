@@ -28,6 +28,7 @@
   },
   "homepage": "https://github.com/AMM011/ascendia-backend#readme",
   "dependencies": {
+    "@types/node": "^24.9.2",
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
@@ -49,7 +50,6 @@
     "@types/express": "^5.0.5",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/multer": "^2.0.0",
-    "@types/node": "^24.9.2",
     "@types/nodemailer": "^7.0.4",
     "@types/supertest": "^6.0.3",
     "@typescript-eslint/eslint-plugin": "^8.46.2",
