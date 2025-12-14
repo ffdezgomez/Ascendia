@@ -14,7 +14,7 @@
     "lint": "eslint . --max-warnings=0",
     "test": "vitest --run",
     "coverage": "vitest --coverage",
-    "prepare": "husky"
+    "prepare": "node ./scripts/husky-install.mjs"
   },
   "repository": {
     "type": "git",
@@ -28,6 +28,12 @@
   },
   "homepage": "https://github.com/AMM011/ascendia-backend#readme",
   "dependencies": {
+    "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.5",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.0.0",
+    "@types/nodemailer": "^7.0.4",
     "@types/node": "^24.9.2",
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
@@ -45,12 +51,6 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.0",
-    "@types/cookie-parser": "^1.4.10",
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.5",
-    "@types/jsonwebtoken": "^9.0.10",
-    "@types/multer": "^2.0.0",
-    "@types/nodemailer": "^7.0.4",
     "@types/supertest": "^6.0.3",
     "@typescript-eslint/eslint-plugin": "^8.46.2",
     "@typescript-eslint/parser": "^8.46.2",

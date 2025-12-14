@@ -91,7 +91,7 @@ export default function Register() {
           </div>
 
           <a
-            href="https://ascendia-one.vercel.app/auth/google/callback"
+            href="https://proyecto-e07-cjqj.onrender.com/auth/google/callback"
             className="mt-6 w-full inline-flex justify-center items-center gap-3 rounded-xl bg-zinc-800 px-5 py-2.5 text-sm font-medium text-zinc-200 ring-1 ring-white/5 transition hover:bg-zinc-700 hover:text-white"
           >
             <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="h-5 w-5" />
