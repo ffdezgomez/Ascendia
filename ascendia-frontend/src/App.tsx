@@ -81,11 +81,26 @@ export default function App() {
           <Route path="/" element={isAuthenticated ? <UserHomePage /> : <LandingPage />} />
 
           {/* públicas */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/recover" element={<RecoverPage />} />
-          <Route path="/recover/reset" element={<RecoverResetPage />} />
-          <Route path="/verify-email" element={<VerifyEmailPage />} />
+          <Route
+            path="/login"
+            element={isAuthenticated ? <Navigate to="/" replace /> : <Login />}
+          />
+          <Route
+            path="/register"
+            element={isAuthenticated ? <Navigate to="/" replace /> : <Register />}
+          />
+          <Route
+            path="/recover"
+            element={isAuthenticated ? <Navigate to="/" replace /> : <RecoverPage />}
+          />
+          <Route
+            path="/recover/reset"
+            element={isAuthenticated ? <Navigate to="/" replace /> : <RecoverResetPage />}
+          />
+          <Route
+            path="/verify-email"
+            element={isAuthenticated ? <Navigate to="/" replace /> : <VerifyEmailPage />}
+          />
 
           {/* privadas */}
           <Route path="/profile" element={isAuthenticated ? <ProfilePage /> : <Navigate to="/login" replace />} />
