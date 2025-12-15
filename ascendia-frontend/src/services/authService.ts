@@ -17,8 +17,20 @@ type ApiError = Error & { response?: { data: { message: string } } };
 
 function createApiError(message: string): ApiError {
   const error = new Error(message) as ApiError;
-  error.response = { data: { message } };
+  // Compatibilidad: en algunas pantallas se lee data.error y en otras data.message
+  error.response = { data: { message, error: message } as any };
   return error;
+}
+
+async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit & { timeoutMs?: number } = {}) {
+  const { timeoutMs = 15_000, ...rest } = init;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(input, { ...rest, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 // Para avisar al frontend cuando cambia el estado de auth
@@ -126,11 +138,12 @@ export const authService = {
    * SOLICITAR RECUPERACIÓN POR EMAIL
    * ================================ */
   async forgotPassword(emailOrUsername: string) {
-    const response = await fetch(api('/auth/forgot-password'), {
+    const response = await fetchWithTimeout(api('/auth/forgot-password'), {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ emailOrUsername }),
+      timeoutMs: 20_000,
     });
 
     const json = await response.json().catch(() => ({}));

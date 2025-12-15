@@ -16,7 +16,13 @@ function createTransporter() {
     );
   }
 
-  return nodemailer.createTransport(smtpConfig);
+  return nodemailer.createTransport({
+    ...smtpConfig,
+    // Evita que la petición HTTP se quede colgada si SMTP no responde.
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 20_000,
+  });
 }
 
 export async function sendResetPasswordEmail({ to, username, token }: ResetEmailArgs) {
