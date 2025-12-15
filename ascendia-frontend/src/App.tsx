@@ -18,9 +18,18 @@ import RecoverResetPage from './pages/RecoverResetPage';
 import DashboardPage from './pages/DashboardPage';
 import VerifyEmailPage from './pages/VerifyEmailPage';
 
+const RAW_API_URL = process.env.REACT_APP_API_URL || '';
+const NORMALIZED_API = RAW_API_URL.replace(/\/+$/, '');
+
+function api(path: string) {
+  if (!NORMALIZED_API) return path;
+  if (NORMALIZED_API.endsWith('/api')) return `${NORMALIZED_API}${path}`;
+  return `${NORMALIZED_API}/api${path}`;
+}
+
 async function fetchAuthStatus() {
   try {
-    const res = await fetch('/api/profile', {
+    const res = await fetch(api('/profile'), {
       credentials: 'include',
       headers: { Accept: 'application/json' },
       cache: 'no-store',

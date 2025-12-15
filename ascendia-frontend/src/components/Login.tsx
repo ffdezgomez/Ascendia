@@ -17,6 +17,8 @@ export default function Login() {
   const navigate = useNavigate();
   const [error, setError] = useState('');
   const [loggedIn, setLoggedIn] = useState(false);
+  const backendBase = (process.env.REACT_APP_API_URL || '').replace(/\/+$/, '');
+  const oauthUrl = backendBase ? `${backendBase}/auth/google` : '/auth/google';
 
   const {
     register,
@@ -98,7 +100,7 @@ export default function Login() {
           </div>
 
           <a
-            href="https://proyecto-e07-cjqj.onrender.com/auth/google/"
+            href={oauthUrl}
             className="mt-6 w-full inline-flex justify-center items-center gap-3 rounded-xl bg-zinc-800 px-5 py-2.5 text-sm font-medium text-zinc-200 ring-1 ring-white/5 transition hover:bg-zinc-700 hover:text-white"
           >
             <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="h-5 w-5" />
